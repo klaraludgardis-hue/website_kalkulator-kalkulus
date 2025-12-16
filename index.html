@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalkulator Kalkulus</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 450px;
+      width: 100%;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+      border-radius: 6px;
+    }
+
+    canvas {
+      margin-top: 20px;
+      max-width: 450px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Kalkulator Kalkulus</h1>
+
+  <div class="container">
+    <label>Jenis Operasi:</label>
+    <select id="type">
+      <option value="diff">Turunan</option>
+      <option value="integ">Integral Tak Tentu</option>
+      <option value="integdef">Integral Tentu</option>
+      <option value="limit">Limit</option>
+    </select>
+
+    <label>Masukkan fungsi f(x):</label>
+    <input type="text" id="expr" placeholder="contoh: x^2 - 4x + 1">
+
+    <div id="batas" style="display:none;">
+      <label>Batas bawah (a):</label>
+      <input type="number" id="a">
+
+      <label>Batas atas (b):</label>
+      <input type="number" id="b">
+    </div>
+
+    <button onclick="hitung()">Hitung</button>
+
+    <div class="result" id="hasil"></div>
+  </div>
+
+  <canvas id="grafik"></canvas>
+
+  <!-- LIBRARY -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- SCRIPT UTAMA -->
+  <script>
+    const type = document.getElementById("type");
+    const batas = document.getElementById("batas");
+    let chart;
+
+    type.addEventListener("change", () => {
+      batas.style.display = type.value === "integdef" ? "block" : "none";
+    });
+
+    function hitung() {
+      const expr = document.getElementById("expr").value;
+      let hasil = "";
+
+      try {
+        if (type.value === "diff") {
+          hasil = math.derivative(expr, "x").toString();
+        }
+        else if (type.value === "integ") {
+          hasil = "∫ " + expr + " dx = " + math.integral(expr, "x");
+        }
+        else if (type.value === "integdef") {
+          const a = parseFloat(document.getElementById("a").value);
+          const b = parseFloat(document.getElementById("b").value);
+          const F = math.integral(expr, "x");
+          hasil = "Hasil = " + (F.evaluate({x:b}) - F.evaluate({x:a}));
+        }
+        else if (type.value === "limit") {
+          const nilai = prompt("x mendekati:");
+          hasil = "Limit = " + math.evaluate(expr, {x: parseFloat(nilai)});
+        }
+      } catch (e) {
+        hasil = "Terjadi kesalahan input";
+      }
+
+      document.getElementById("hasil").innerHTML = hasil;
+      gambarGrafik(expr);
+    }
+
+    function gambarGrafik(expr) {
+      const xVal = [];
+      const yVal = [];
+
+      for (let x = -10; x <= 10; x++) {
+        xVal.push(x);
+        yVal.push(math.evaluate(expr, {x}));
+      }
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(document.getElementById("grafik"), {
+        type: "line",
+        data: {
+          labels: xVal,
+          datasets: [{
+            label: "f(x)",
+            data: yVal,
+            borderWidth: 2
+          }]
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
